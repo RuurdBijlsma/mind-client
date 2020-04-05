@@ -1,4 +1,4 @@
-# mindtest
+# mind-client
 
 ## Project setup
 ```
