@@ -9,9 +9,9 @@
         <p>Top Card: {{topCard}}</p>
         <div v-for="player in players" :key="player.name">
             {{player.name}} cards:
-            <v-btn v-for="card in player.hand" :key="card" :disabled="player.isComputer"
-                   @click="playCard(player, card)">{{card}}
-            </v-btn>
+            <div v-for="card in player.hand" :key="card" :disabled="player.isComputer"
+                 @click="playCard(player, card)">{{card}}
+            </div>
         </div>
         <v-btn @click="proposeShuriken" v-if="shurikens>0">Propose Shuriken</v-btn>
         <v-btn @click="nextRound">Next Round</v-btn>
@@ -137,7 +137,7 @@
         }
     }
 </script>
-<style>
+<style scoped>
     .game {
         padding: 20px;
     }
