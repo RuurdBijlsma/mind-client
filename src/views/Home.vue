@@ -1,6 +1,7 @@
 <template>
     <div class="home">
         <h1>Home Page {{hello}}</h1>
+        <router-link to="play">Play</router-link>
     </div>
 </template>
 
@@ -8,8 +9,8 @@
 
     export default {
         name: 'Home',
-        data(){
-            return{
+        data() {
+            return {
                 hello: 'world',
             }
         },
