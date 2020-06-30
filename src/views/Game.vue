@@ -1,32 +1,59 @@
 <template>
     <div class="game">
-        <h1>Game</h1>
-        <v-sheet style="padding: 10px; margin:10px;" elevation="4">
-            <h4 v-for="({name, data}, i) in debugEvents" :key="i">[{{name}}]: {{data}}<br></h4>
-        </v-sheet>
-        <p>Shurikens: {{shurikens}}</p>
-        <p>Lives: {{lives}}</p>
-        <p>Top Card: {{topCard}}</p>
-        <div v-for="player in players" :key="player.name">
-            {{player.name}} cards:
-            <div v-for="card in player.hand" :key="card" :disabled="player.isComputer"
-                 @click="playCard(player, card)">{{card}}
+        <div class="field">
+            <div class="playing-field">
+                <div class="deck" ref="deck">
+                    <mind-card v-for="(card, i) in deck" :value="card"
+                               :style="`top: ${i*40}px; transform: translateX(${Math.round(Math.random()*20)}px)`"
+                               :key="card"></mind-card>
+                </div>
+                <div v-if="players[1]" class="computer cards">
+                    <p v-if="players[1].hand.length===0">The computer has no cards left</p>
+                    <mind-card v-for="card in players[1].hand" :key="card" :value="card" :hide="true">
+                    </mind-card>
+                </div>
+                <div v-if="players[0]" class="human cards">
+                    <p v-if="players[0].hand.length===0">You have no cards left</p>
+                    <mind-card v-for="card in players[0].hand" :key="card" @click="playCard(players[0], card)"
+                               :value="card">
+                    </mind-card>
+                </div>
+            </div>
+            <div class="bottom-bar">
+                <div class="game-actions">
+                    <v-btn @click="nextRound" v-if="nextRoundReady" color="primary">Next Round</v-btn>
+                    <v-btn @click="newGame(2, true)">New Game</v-btn>
+                </div>
+                <div class="game-info">
+                    <p>Round: {{round}}</p>
+                    <p>Shurikens: {{shurikens}}
+                        <v-btn @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady">Propose</v-btn>
+                    </p>
+                    <p>Lives: {{lives}}</p>
+
+                </div>
             </div>
         </div>
-        <v-btn @click="proposeShuriken" v-if="shurikens>0">Propose Shuriken</v-btn>
-        <v-btn @click="nextRound">Next Round</v-btn>
-        <v-btn @click="newGame(2)">New Game</v-btn>
     </div>
 </template>
 
 <script>
     import io from "socket.io-client";
     import Player from "../js/Player";
+    import MindCard from "../components/MindCard";
+    import Swal from 'sweetalert2'
+
+    // Todo:
+    // More game functionality
+    // Model play all cards when opponent hand is empty
+    // Tell model whether it was successful in playing the card
+    // Add server to hpserver
 
     export default {
         name: 'Game',
-        components: {},
+        components: {MindCard},
         data: () => ({
+            debug: true,
             socket: null,
             debugEvents: [],
             players: [],
@@ -36,6 +63,9 @@
             round: 0,
             lives: -1,
             shurikens: -1,
+            dead: false,
+            playTimeouts: [],
+            nextRoundReady: false,
         }),
         mounted() {
             const url = 'http://localhost:5000';
@@ -45,7 +75,15 @@
             this.newGame(2)
         },
         methods: {
-            newGame(players) {
+            async newGame(players, prompt = false) {
+                if (prompt && !(await Swal.fire({
+                    title: 'Are you sure you want to start a new game?',
+                    text: "All progress will be lost!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, new game!'
+                })).value) return;
+                this.dead = false;
                 this.human = new Player('human', false);
                 this.players = [];
                 this.models = [];
@@ -55,8 +93,8 @@
                     this.players.push(computerPlayer);
                     this.models.push(computerPlayer);
                 }
-                this.lives = 3;
-                this.shurikens = 3;
+                this.lives = 2;
+                this.shurikens = 1;
                 this.socket.emit('new_game');
                 this.newRound(2);
             },
@@ -64,30 +102,93 @@
                 this.newRound(this.round + 1);
             },
             newRound(roundNumber) {
+                this.nextRoundReady = false;
                 this.round = roundNumber;
+                this.deck = [];
                 const deckSize = 100;
                 let allCards = this.shuffle([...new Array(deckSize)].map((_, i) => i + 1));
                 for (let player of this.players) {
-                    player.hand = allCards.splice(0, roundNumber).sort();
+                    player.hand = allCards.splice(0, roundNumber);
+                    console.log(player.hand)
+                    player.hand = player.hand.sort((a, b) => a - b);
                 }
                 this.socket.emit('new_round', this.models[0].hand);
             },
-            playCard(player, ...cards) {
-                for (let card of cards) {
-                    let index = player.hand.indexOf(card);
-                    console.log('removing', index, card, player.hand);
-                    player.hand.splice(index, 1);
+            async playCard(player, card, shuriken = false) {
+                if (this.dead)
+                    return false;
+                if (!player.hand.includes(card))
+                    return console.warn("Player", player, "tried to play card", card, "but it's not in their hand");
+                if (card < this.topCard && !shuriken) {
+                    this.lives--;
+                    this.socket.emit('life_lost', player === this.human);
+                    if (this.lives === 0) {
+                        for (let timeout of this.playTimeouts)
+                            clearTimeout(timeout)
+                        await Swal.fire({
+                            title: "You died one too many times",
+                            text: "You reached round " + this.round,
+                            icon: "error",
+                            confirmButtonText: '😢',
+                        });
+                        this.dead = true;
+                        return;
+                    }
                 }
+
+                let index = player.hand.indexOf(card);
+                console.log('removing', index, card, player.hand);
+                player.hand.splice(index, 1);
+                if (this.human.hand.length === 0) {
+                    let i = 0;
+                    for (let card of this.models[0].hand) {
+                        this.playTimeouts.push(setTimeout(async () => {
+                            await this.playCard(this.models[0], card);
+                        }, ++i * 300));
+                    }
+                    this.playTimeouts.push(setTimeout(async () => {
+                        this.socket.emit('update_model_hand', this.models[0].hand);
+                    }, i * 300));
+                }
+
                 if (player === this.human)
-                    this.socket.emit('cards_played', cards);
-                this.deck = this.deck.concat(cards);
+                    this.socket.emit('card_played', card);
+                this.deck.push(card);
+                setTimeout(() => {
+                    if (this.$refs.deck)
+                        this.$refs.deck.scroll(0, this.$refs.deck.scrollHeight);
+                }, 50);
+
+                if (this.players.every(player => player.hand.length === 0)) {
+                    if (this.round === 12) {
+                        await Swal.fire({
+                            title: "You win!",
+                            icon: "success",
+                            confirmButtonText: '😃',
+                        });
+                    } else {
+                        this.nextRoundReady = true;
+                    }
+                }
             },
             proposeShuriken() {
                 this.socket.emit('shuriken_proposed');
             },
             activateShuriken() {
                 this.shurikens--;
-                console.warn("TODO");
+                let i = 0;
+                for (let player of this.players) {
+                    let lowestCard = player.hand[0];
+                    this.playTimeouts.push(setTimeout(async () => {
+                        await this.playCard(player, lowestCard, true);
+
+                        if (player === this.human) {
+                            this.socket.emit('update_player_hand_size', this.human.hand);
+                        } else {
+                            this.socket.emit('update_model_hand', this.models[0].hand);
+                        }
+                    }, ++i * 300));
+                }
             },
             shuffle(input) {
                 for (let i = input.length - 1; i >= 0; i--) {
@@ -139,6 +240,82 @@
 </script>
 <style scoped>
     .game {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+    }
+
+    .field {
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        background-image: linear-gradient(to top, #000000 0%, #1461e5 59%, #903f0b 100%);
+    }
+
+    .playing-field {
+        width: 100%;
+        height: calc(100% - 140px);
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .bottom-bar {
+        width: 100%;
+        height: 140px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        padding: 10px;
+    }
+
+    .bottom-bar > div {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+    }
+
+    .cards {
+        display: flex;
+        position: absolute;
+        overflow-x: auto;
+        overflow-y: visible;
+        width: 100%;
         padding: 20px;
+    }
+
+    .cards > * {
+        margin-right: 10px;
+        overflow: visible;
+    }
+
+    .computer {
+        top: 0;
+    }
+
+    .human {
+        bottom: 0;
+    }
+
+    .deck {
+        position: absolute;
+        top: calc(50% - 150px - -20px);
+        left: calc(50% - 100px);
+        height: 300px;
+        width: 200px;
+        text-align: center;
+        overflow-y: auto;
+    }
+
+    .deck > * {
+        position: absolute;
+    }
+
+    .cards {
+
     }
 </style>
