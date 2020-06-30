@@ -49,6 +49,8 @@
     // Tell model whether it was successful in playing the card
     // Add server to hpserver
 
+    // Show what can be gained this round (lives/shurikens) (maybe after round is complete)
+
     export default {
         name: 'Game',
         components: {MindCard},
@@ -66,6 +68,11 @@
             dead: false,
             playTimeouts: [],
             nextRoundReady: false,
+            //This means after completing round 2 you get 1 life
+            roundBonuses: {
+                2: {lives: 1},
+                3: {shurikens: 1}
+            }
         }),
         mounted() {
             const url = 'http://localhost:5000';
@@ -167,6 +174,28 @@
                             confirmButtonText: '😃',
                         });
                     } else {
+                        let bonuses = this.roundBonuses[this.round];
+                        let bonusText;
+                        if (bonuses.lives && bonuses.shurikens)
+                            bonusText = `For completing round ${this.round} you get a bonus life and a bonus shuriken!`;
+                        else if (bonuses.lives)
+                            bonusText = `For completing round ${this.round} you get a bonus life!`;
+                        else if (bonuses.shurikens)
+                            bonusText = `For completing round ${this.round} you get a bonus shuriken!`;
+                        if (bonusText)
+                            await Swal.fire({
+                                title: bonusText,
+                                icon: "success",
+                                confirmButtonText: '😃',
+                            });
+                        if (bonuses.lives) {
+                            this.lives += bonuses.lives;
+                            this.socket.emit('get_life', bonuses.lives)
+                        }
+                        if (bonuses.shurikens) {
+                            this.shurikens += bonuses.shurikens;
+                            this.socket.emit('get_shuriken', bonuses.shurikens)
+                        }
                         this.nextRoundReady = true;
                     }
                 }
