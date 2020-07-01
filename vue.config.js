@@ -1,7 +1,6 @@
 module.exports = {
-    "lintOnSave": false,
-    "transpileDependencies": [
-        "vuetify"
-    ],
-    publicPath: '/mind',
+  "lintOnSave": false,
+  "transpileDependencies": [
+    "vuetify"
+  ]
 }
