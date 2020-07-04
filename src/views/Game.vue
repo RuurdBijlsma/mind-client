@@ -27,7 +27,7 @@
                 <div class="game-info">
                     <p>Round: {{round}}</p>
                     <p>Shurikens: {{shurikens}}
-                        <v-btn @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady">Propose</v-btn>
+                        <v-btn @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady && !dead">Propose</v-btn>
                     </p>
                     <p>Lives: {{lives}}</p>
 
