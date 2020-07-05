@@ -27,7 +27,9 @@
                 <div class="game-info">
                     <p>Round: {{round}}</p>
                     <p>Shurikens: {{shurikens}}
-                        <v-btn @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady && !dead">Propose</v-btn>
+                        <v-btn @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady && !dead">
+                            Propose
+                        </v-btn>
                     </p>
                     <p>Lives: {{lives}}</p>
 
@@ -121,12 +123,12 @@
                 }
                 this.socket.emit('new_round', this.models[0].hand);
             },
-            async playCard(player, card, shuriken = false) {
+            async playCard(player, card, noPenalty = false) {
                 if (this.dead)
                     return false;
                 if (!player.hand.includes(card))
                     return console.warn("Player", player, "tried to play card", card, "but it's not in their hand");
-                if (card < this.topCard && !shuriken) {
+                if (card < this.topCard && !noPenalty) {
                     this.lives--;
                     this.socket.emit('life_lost', player === this.human);
                     if (this.lives === 0) {
@@ -140,6 +142,8 @@
                         });
                         this.dead = true;
                         return;
+                    }else{
+                        this.playAllLowerCards();
                     }
                 }
 
@@ -158,8 +162,9 @@
                     }, i * 300));
                 }
 
-                if (player === this.human)
+                if (player === this.human) {
                     this.socket.emit('card_played', card);
+                }
                 this.deck.push(card);
                 setTimeout(() => {
                     if (this.$refs.deck)
@@ -175,28 +180,43 @@
                         });
                     } else {
                         let bonuses = this.roundBonuses[this.round];
-                        let bonusText;
-                        if (bonuses.lives && bonuses.shurikens)
-                            bonusText = `For completing round ${this.round} you get a bonus life and a bonus shuriken!`;
-                        else if (bonuses.lives)
-                            bonusText = `For completing round ${this.round} you get a bonus life!`;
-                        else if (bonuses.shurikens)
-                            bonusText = `For completing round ${this.round} you get a bonus shuriken!`;
-                        if (bonusText)
-                            await Swal.fire({
-                                title: bonusText,
-                                icon: "success",
-                                confirmButtonText: '😃',
-                            });
-                        if (bonuses.lives) {
-                            this.lives += bonuses.lives;
-                            this.socket.emit('get_life', bonuses.lives)
-                        }
-                        if (bonuses.shurikens) {
-                            this.shurikens += bonuses.shurikens;
-                            this.socket.emit('get_shuriken', bonuses.shurikens)
+                        if(bonuses){
+                            let bonusText;
+                            if (bonuses.lives && bonuses.shurikens)
+                                bonusText = `For completing round ${this.round} you get a bonus life and a bonus shuriken!`;
+                            else if (bonuses.lives)
+                                bonusText = `For completing round ${this.round} you get a bonus life!`;
+                            else if (bonuses.shurikens)
+                                bonusText = `For completing round ${this.round} you get a bonus shuriken!`;
+                            if (bonusText)
+                                await Swal.fire({
+                                    title: bonusText,
+                                    icon: "success",
+                                    confirmButtonText: '😃',
+                                });
+                            if (bonuses.lives) {
+                                this.lives += bonuses.lives;
+                                this.socket.emit('get_life', bonuses.lives)
+                            }
+                            if (bonuses.shurikens) {
+                                this.shurikens += bonuses.shurikens;
+                                this.socket.emit('get_shuriken', bonuses.shurikens)
+                            }
                         }
                         this.nextRoundReady = true;
+                    }
+                }
+            },
+            playAllLowerCards() {
+                let i = 0;
+                for (let player of this.players) {
+                    for (let card of player.hand) {
+                        if (card < this.topCard) {
+                            console.log("[play all lower cards]", card)
+                            this.playTimeouts.push(setTimeout(async () => {
+                                await this.playCard(player, card, true);
+                            }, ++i * 300))
+                        }
                     }
                 }
             },
@@ -212,7 +232,7 @@
                         await this.playCard(player, lowestCard, true);
 
                         if (player === this.human) {
-                            this.socket.emit('update_player_hand_size', this.human.hand);
+                            this.socket.emit('update_player_hand_size', this.human.hand.length);
                         } else {
                             this.socket.emit('update_model_hand', this.models[0].hand);
                         }
