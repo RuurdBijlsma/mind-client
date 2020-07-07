@@ -38,6 +38,7 @@
         },
     }
 </script>
+
 <style scoped>
     .card {
         background-color: white;

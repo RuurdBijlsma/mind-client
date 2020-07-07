@@ -287,6 +287,7 @@
         }
     }
 </script>
+
 <style scoped>
     .game {
         display: flex;
