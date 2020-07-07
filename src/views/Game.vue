@@ -143,7 +143,7 @@
                         this.dead = true;
                         return;
                     }else{
-                        this.playAllLowerCards();
+                        // this.playAllLowerCards();
                     }
                 }
 
