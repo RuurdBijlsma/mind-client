@@ -69,7 +69,6 @@
             round: 0,
             lives: -1,
             shurikens: -1,
-            dead: false,
             playTimeouts: [],
             nextRoundReady: false,
             //This means after completing round 2 you get 1 life
@@ -86,6 +85,9 @@
             this.setSocketListeners();
             this.newGame(2)
         },
+        beforeDestroy() {
+            this.socket.destroy()
+        },
         methods: {
             async newGame(players, prompt = false) {
                 if (prompt && !(await Swal.fire({
@@ -95,7 +97,6 @@
                     showCancelButton: true,
                     confirmButtonText: 'Yes, new game!'
                 })).value) return;
-                this.dead = false;
                 this.human = new Player('human', false);
                 this.players = [];
                 this.models = [];
@@ -144,7 +145,6 @@
                             icon: "error",
                             confirmButtonText: '😢',
                         });
-                        this.dead = true;
                         return;
                     } else {
                         // this.playAllLowerCards();
@@ -282,6 +282,9 @@
                 if (this.deck.length === 0)
                     return 0;
                 return this.deck[this.deck.length - 1];
+            },
+            dead() {
+                return this.lives <= 0;
             }
         }
     }
