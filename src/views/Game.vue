@@ -27,7 +27,7 @@
                 <div class="game-info">
                     <p>Round: {{round}}</p>
                     <p>Shurikens: {{shurikens}}
-                        <v-btn @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady && !dead">
+                        <v-btn @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady && !dead && models[0].hand.length > 0">
                             Propose
                         </v-btn>
                     </p>
@@ -73,7 +73,7 @@
             //This means after completing round 2 you get 1 life
             roundBonuses: {
                 2: {lives: 1},
-                3: {shurikens: 1}
+                3: {shurikens: 1},
             }
         }),
         mounted() {
