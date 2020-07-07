@@ -134,7 +134,7 @@
                     return console.warn("Player", player, "tried to play card", card, "but it's not in their hand");
                 if (card < this.topCard && !noPenalty) {
                     this.lives--;
-                    this.socket.emit('life_lost', player === this.human);
+                    // this.socket.emit('life_lost', player === this.human);
                     if (this.lives === 0) {
                         for (let timeout of this.playTimeouts)
                             clearTimeout(timeout)
@@ -157,17 +157,17 @@
                 let index = player.hand.indexOf(card);
                 console.log('removing', index, card, player.hand);
                 player.hand.splice(index, 1);
-                if (this.human.hand.length === 0) {
-                    let i = 0;
-                    for (let card of this.models[0].hand) {
-                        this.playTimeouts.push(setTimeout(async () => {
-                            await this.playCard(this.models[0], card);
-                        }, ++i * 300));
-                    }
-                    this.playTimeouts.push(setTimeout(async () => {
-                        this.socket.emit('update_model_hand', this.models[0].hand);
-                    }, i * 300));
-                }
+                // if (this.human.hand.length === 0) {
+                //     let i = 0;
+                //     for (let card of this.models[0].hand) {
+                //         this.playTimeouts.push(setTimeout(async () => {
+                //             await this.playCard(this.models[0], card);
+                //         }, ++i * 300));
+                //     }
+                //     this.playTimeouts.push(setTimeout(async () => {
+                //         this.socket.emit('update_model_hand', this.models[0].hand);
+                //     }, i * 300));
+                // }
 
                 if (player === this.human) {
                     this.socket.emit('card_played', card);
