@@ -9,7 +9,8 @@
                 </div>
                 <div v-if="players[1]" class="computer cards">
                     <p v-if="players[1].hand.length===0">The computer has no cards left</p>
-                    <mind-card v-for="card in players[1].hand" :key="card" :value="card" :hide="true">
+                    <mind-card v-for="card in players[1].hand" :key="card" :value="card"
+                               :hide="!modelRevealedCards.includes(card)">
                     </mind-card>
                 </div>
                 <div v-if="players[0]" class="human cards">
@@ -27,7 +28,8 @@
                 <div class="game-info">
                     <p>Round: {{round}}</p>
                     <p>Shurikens: {{shurikens}}
-                        <v-btn @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady && !dead && models[0].hand.length > 0">
+                        <v-btn @click="proposeShuriken" outlined
+                               v-if="shurikens>0 && !nextRoundReady && !dead && models[0].hand.length > 0">
                             Propose
                         </v-btn>
                     </p>
@@ -74,7 +76,8 @@
             roundBonuses: {
                 2: {lives: 1},
                 3: {shurikens: 1},
-            }
+            },
+            modelRevealedCards: [],
         }),
         mounted() {
             const url = 'http://localhost:5000';
@@ -111,6 +114,7 @@
                 this.newRound(this.round + 1);
             },
             newRound(roundNumber) {
+                this.modelRevealedCards = [];
                 this.nextRoundReady = false;
                 this.round = roundNumber;
                 this.deck = [];
@@ -142,9 +146,12 @@
                         });
                         this.dead = true;
                         return;
-                    }else{
+                    } else {
                         // this.playAllLowerCards();
                     }
+                }
+                if (card > this.topCard) {
+                    this.socket.emit('life_not_lost');
                 }
 
                 let index = player.hand.indexOf(card);
@@ -164,7 +171,7 @@
 
                 if (player === this.human) {
                     this.socket.emit('card_played', card);
-                }else{
+                } else {
                     this.socket.emit('update_top_card', card)
                 }
                 this.deck.push(card);
@@ -182,7 +189,7 @@
                         });
                     } else {
                         let bonuses = this.roundBonuses[this.round];
-                        if(bonuses){
+                        if (bonuses) {
                             let bonusText;
                             if (bonuses.lives && bonuses.shurikens)
                                 bonusText = `For completing round ${this.round} you get a bonus life and a bonus shuriken!`;
@@ -227,19 +234,9 @@
             },
             activateShuriken() {
                 this.shurikens--;
-                let i = 0;
-                for (let player of this.players) {
-                    let lowestCard = player.hand[0];
-                    this.playTimeouts.push(setTimeout(async () => {
-                        await this.playCard(player, lowestCard, true);
-
-                        if (player === this.human) {
-                            this.socket.emit('update_player_hand_size', this.human.hand.length);
-                        } else {
-                            this.socket.emit('update_model_hand', this.models[0].hand);
-                        }
-                    }, ++i * 300));
-                }
+                console.log("Human lowest card:", this.human.hand[0], "model lowest card", this.models[0].hand[0])
+                this.socket.emit('reveal_lowest_card', this.human.hand[0]);
+                this.modelRevealedCards.push(this.models[0].hand[0]);
             },
             shuffle(input) {
                 for (let i = input.length - 1; i >= 0; i--) {
