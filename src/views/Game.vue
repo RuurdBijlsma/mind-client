@@ -108,7 +108,7 @@
                 this.lives = 2;
                 this.shurikens = 1;
                 this.socket.emit('new_game');
-                this.newRound(2);
+                this.newRound(3);
             },
             nextRound() {
                 this.newRound(this.round + 1);
@@ -172,7 +172,7 @@
                 if (player === this.human) {
                     this.socket.emit('card_played', card);
                 } else {
-                    this.socket.emit('update_top_card', card)
+                    // this.socket.emit('update_top_card', card)
                 }
                 this.deck.push(card);
                 setTimeout(() => {
