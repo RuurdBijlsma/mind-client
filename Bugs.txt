@@ -1,0 +1,8 @@
+
+- Propose Shuriken model card is empty
+
+- Lives not lost after playing high card
+
+
+
+
