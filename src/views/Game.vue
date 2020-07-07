@@ -164,6 +164,8 @@
 
                 if (player === this.human) {
                     this.socket.emit('card_played', card);
+                }else{
+                    this.socket.emit('update_top_card', card)
                 }
                 this.deck.push(card);
                 setTimeout(() => {
