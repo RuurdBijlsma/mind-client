@@ -1,5 +1,6 @@
 <template>
-    <div class="card hidden" v-if="hide">
+    <div class="card hidden" v-if="hide"
+         :style="`opacity: ${this.discarded ? 0 : 1}`">
     </div>
     <div class="card" v-else :clickable="$listeners.hasOwnProperty('click')" @click="$emit('click')">
         <div class="top-number">
@@ -28,7 +29,7 @@
                 type: Boolean,
                 default: false,
             },
-            clickable: {
+            discarded: {
                 type: Boolean,
                 default: false,
             },
@@ -54,7 +55,7 @@
         min-width: 100px;
         box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.3);
         border-radius: 15px;
-        transition: transform 0.2s;
+        transition: transform 0.2s, opacity 0.5s, width 0.5s, min-width 0.5s;
         text-align: center;
     }
 

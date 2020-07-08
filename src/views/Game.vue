@@ -2,21 +2,31 @@
     <div class="game">
         <div class="field">
             <div class="playing-field">
-                <div class="deck" ref="deck">
-                    <mind-card v-for="(card, i) in deck" :value="card"
-                               :style="`top: ${i*40}px; transform: translateX(${Math.round(Math.random()*20)}px)`"
-                               :key="card"></mind-card>
-                </div>
                 <div v-if="players[1]" class="computer cards">
                     <p v-if="players[1].hand.length===0">The computer has no cards left</p>
-                    <mind-card v-for="card in players[1].hand" :key="card" :value="card"
-                               :hide="!modelRevealedCards.includes(card)">
+                    <mind-card v-for="card in players[1].hand" :key="card" :hide="!modelRevealedCards.includes(card)"
+                               :value="card"
+                               :style="`
+                                opacity: ${discardedCards.includes(card)?'0':'1'};
+                                transform: translateY(${discardedCards.includes(card)?'200px':'0'});
+                               `">
                     </mind-card>
+                </div>
+                <div class="middle-section">
+                    <div class="deck" ref="deck">
+                        <mind-card v-for="(card, i) in deck" :value="card"
+                                   :style="`top: ${i*40}px; transform: translateX(${Math.round(Math.random()*20)}px)`"
+                                   :key="card"></mind-card>
+                    </div>
                 </div>
                 <div v-if="players[0]" class="human cards">
                     <p v-if="players[0].hand.length===0">You have no cards left</p>
                     <mind-card v-for="card in players[0].hand" :key="card" @click="playCard(players[0], card)"
-                               :value="card">
+                               :value="card"
+                               :style="`
+                                opacity: ${discardedCards.includes(card)?'0':'1'};
+                                transform: translateY(${discardedCards.includes(card)?'-200px':'0'});
+                               `">
                     </mind-card>
                 </div>
             </div>
@@ -77,6 +87,7 @@
                 3: {shurikens: 1},
             },
             modelRevealedCards: [],
+            discardedCards: [],
         }),
         mounted() {
             const url = 'http://localhost:5000';
@@ -116,6 +127,7 @@
             },
             newRound(roundNumber) {
                 this.modelRevealedCards = [];
+                this.discardedCards = [];
                 this.nextRoundReady = false;
                 this.round = roundNumber;
                 this.deck = [];
@@ -128,11 +140,33 @@
                 }
                 this.socket.emit('new_round', this.models[0].hand);
             },
+            async disappearCard(player, card) {
+                return new Promise(resolve => {
+                    this.discardedCards.push(card);
+                    setTimeout(() => {
+                        let index = player.hand.indexOf(card);
+                        console.log('Discarding', index, card, 'from', player.hand);
+                        player.hand.splice(index, 1);
+                        resolve();
+                    }, 500);
+                });
+            },
+            async discardCard(player, card) {
+                if (this.dead)
+                    return false;
+                if (!player.hand.includes(card))
+                    return console.warn("Player", player, "tried to [DISCARD] card", card, "but it's not in their hand");
+                await this.disappearCard(player, card);
+
+                await this.checkWin();
+            },
             async playCard(player, card, noPenalty = false) {
                 if (this.dead)
                     return false;
                 if (!player.hand.includes(card))
-                    return console.warn("Player", player, "tried to play card", card, "but it's not in their hand");
+                    return console.warn("Player", player, "tried to [PLAY] card", card, "but it's not in their hand");
+
+                // Remove life if mistake was made
                 if (card < this.topCard && !noPenalty) {
                     this.lives--;
                     // this.socket.emit('life_lost', player === this.human);
@@ -150,13 +184,9 @@
                         // this.playAllLowerCards();
                     }
                 }
-                if (card > this.topCard) {
+                if (card > this.topCard)
                     this.socket.emit('life_not_lost');
-                }
 
-                let index = player.hand.indexOf(card);
-                console.log('removing', index, card, player.hand);
-                player.hand.splice(index, 1);
                 // if (this.human.hand.length === 0) {
                 //     let i = 0;
                 //     for (let card of this.models[0].hand) {
@@ -174,12 +204,17 @@
                 } else {
                     // this.socket.emit('update_top_card', card)
                 }
+
+                await this.disappearCard(player, card);
                 this.deck.push(card);
                 setTimeout(() => {
                     if (this.$refs.deck)
                         this.$refs.deck.scroll(0, this.$refs.deck.scrollHeight);
                 }, 50);
 
+                await this.checkWin();
+            },
+            async checkWin() {
                 if (this.players.every(player => player.hand.length === 0)) {
                     if (this.round === 12) {
                         await Swal.fire({
@@ -256,6 +291,10 @@
                 this.socket.on('play_card', card => {
                     this.debugEvents.push({name: 'play_card', data: card});
                     this.playCard(this.models[0], card);
+                });
+                this.socket.on('discard_card', card => {
+                    this.debugEvents.push({name: 'discard_card', data: card});
+                    this.discardCard(this.models[0], card);
                 });
                 this.socket.on('shuriken_proposed', () => {
                     this.debugEvents.push({name: 'shuriken_proposed', data: ''});
@@ -352,10 +391,17 @@
         bottom: 0;
     }
 
-    .deck {
+    .middle-section {
         position: absolute;
-        top: calc(50% - 150px - -20px);
-        left: calc(50% - 100px);
+        top: 250px;
+        width: 100%;
+        height: calc(100% - 500px);
+        display: flex;
+        justify-content: space-around;
+        flex-direction: row;
+    }
+
+    .deck {
         height: 300px;
         width: 200px;
         text-align: center;
