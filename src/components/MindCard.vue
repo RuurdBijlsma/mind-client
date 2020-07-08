@@ -1,6 +1,10 @@
 <template>
     <div class="card hidden" v-if="hide">
     </div>
+    <div class="card star" v-else-if="star" :clickable="$listeners.hasOwnProperty('click')" @click="$emit('click')">
+    </div>
+    <div class="card life" v-else-if="life">
+    </div>
     <div class="card" v-else :clickable="$listeners.hasOwnProperty('click')" @click="$emit('click')">
         <div class="top-number">
             <span>{{value}}</span>
@@ -29,6 +33,14 @@
                 default: false,
             },
             clickable: {
+                type: Boolean,
+                default: false,
+            },
+            star: {
+                type: String,
+                default: false,
+            },
+            life: {
                 type: Boolean,
                 default: false,
             },
@@ -75,6 +87,14 @@
         background-image: url("../assets/card-back.png");
     }
 
+    .star {
+        background-image: url("../assets/card-star.png");
+    }
+
+    .life {
+        background-image: url("../assets/card-life.png");
+    }
+    
     .big-number {
         font-size: 60px;
         font-weight: bold;

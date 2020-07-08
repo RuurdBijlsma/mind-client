@@ -18,6 +18,14 @@
                                :value="card">
                     </mind-card>
                 </div>
+                <div class="star cards">
+                    <mind-card :star="true" @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady">
+                    </mind-card>
+                </div>
+                <div class="life cards">
+                    <mind-card :life="true">
+                    </mind-card>
+                </div>
             </div>
             <div class="bottom-bar">
                 <div class="game-actions">
@@ -296,13 +304,6 @@
         height: 100%;
     }
 
-    .field {
-        width: 100%;
-        height: 100%;
-        background-color: black;
-        background-image: linear-gradient(to top, #000000 0%, #1461e5 59%, #903f0b 100%);
-    }
-
     .playing-field {
         width: 100%;
         height: calc(100% - 140px);
@@ -351,6 +352,15 @@
         bottom: 0;
     }
 
+    .star {
+        top:38%;
+    }
+
+    .life{
+        left: 90%;
+        top: 38%;
+    }
+    
     .deck {
         position: absolute;
         top: calc(50% - 150px - -20px);
@@ -365,7 +375,4 @@
         position: absolute;
     }
 
-    .cards {
-
-    }
 </style>

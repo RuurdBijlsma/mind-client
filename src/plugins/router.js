@@ -1,14 +1,21 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
+import Splash from '../views/Splash.vue'
+import Game from '../views/Game'
+import Tutorial from '../views/Tutorial.vue'
 
 Vue.use(VueRouter);
 
 const routes = [
     {
         path: '/',
-        name: 'Home',
-        component: Home
+        name: 'Splash',
+        component: Splash
+    },
+    {
+        path: '/tutorial',
+        name: 'Tutorial',
+        component: Tutorial
     },
     {
         path: '/play',
