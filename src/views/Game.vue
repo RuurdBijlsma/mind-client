@@ -1,47 +1,45 @@
 <template>
     <div class="game">
-        <div class="field">
-            <div class="playing-field">
-                <div class="deck" ref="deck">
-                    <mind-card v-for="(card, i) in deck" :value="card"
-                               :style="`top: ${i*40}px; transform: translateX(${Math.round(Math.random()*20)}px)`"
-                               :key="card"></mind-card>
-                </div>
-                <div v-if="players[1]" class="computer cards">
-                    <p v-if="players[1].hand.length===0">The computer has no cards left</p>
-                    <mind-card v-for="card in players[1].hand" :key="card" :value="card" :hide="true">
-                    </mind-card>
-                </div>
-                <div v-if="players[0]" class="human cards">
-                    <p v-if="players[0].hand.length===0">You have no cards left</p>
-                    <mind-card v-for="card in players[0].hand" :key="card" @click="playCard(players[0], card)"
-                               :value="card">
-                    </mind-card>
-                </div>
-                <div class="star cards">
-                    <mind-card :star="true" @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady">
-                    </mind-card>
-                </div>
-                <div class="life cards">
-                    <mind-card :life="true">
-                    </mind-card>
-                </div>
+        <div class="playing-field">
+            <div class="deck" ref="deck">
+                <mind-card v-for="(card, i) in deck" :value="card"
+                            :style="`top: ${i*40}px; transform: translateX(${Math.round(Math.random()*20)}px)`"
+                            :key="card"></mind-card>
             </div>
-            <div class="bottom-bar">
-                <div class="game-actions">
-                    <v-btn @click="nextRound" v-if="nextRoundReady" color="primary">Next Round</v-btn>
-                    <v-btn @click="newGame(2, true)">New Game</v-btn>
-                </div>
-                <div class="game-info">
-                    <p>Round: {{round}}</p>
-                    <p>Shurikens: {{shurikens}}
-                        <v-btn @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady && !dead">
-                            Propose
-                        </v-btn>
-                    </p>
-                    <p>Lives: {{lives}}</p>
+            <div v-if="players[1]" class="computer cards">
+                <p v-if="players[1].hand.length===0">The computer has no cards left</p>
+                <mind-card v-for="card in players[1].hand" :key="card" :value="card" :hide="true">
+                </mind-card>
+            </div>
+            <div v-if="players[0]" class="human cards">
+                <p v-if="players[0].hand.length===0">You have no cards left</p>
+                <mind-card v-for="card in players[0].hand" :key="card" @click="playCard(players[0], card)"
+                            :value="card">
+                </mind-card>
+            </div>
+            <div class="star cards">
+                <mind-card :star="true" @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady">
+                </mind-card>
+            </div>
+            <div class="life cards">
+                <mind-card :life="true">
+                </mind-card>
+            </div>
+        </div>
+        <div class="bottom-bar">
+            <div class="game-actions">
+                <v-btn @click="nextRound" v-if="nextRoundReady" color="primary">Next Round</v-btn>
+                <v-btn @click="newGame(2, true)">New Game</v-btn>
+            </div>
+            <div class="game-info">
+                <p>Round: {{round}}</p>
+                <p>Shurikens: {{shurikens}}
+                    <v-btn @click="proposeShuriken" outlined v-if="shurikens>0 && !nextRoundReady && !dead">
+                        Propose
+                    </v-btn>
+                </p>
+                <p>Lives: {{lives}}</p>
 
-                </div>
             </div>
         </div>
     </div>
@@ -345,20 +343,27 @@
     }
 
     .computer {
-        top: 0;
+        top: 0%;
+        left: 40%;
+        
+        /* margin-top: -50px; */
+        /* margin-left: -100px; */
     }
 
     .human {
         bottom: 0;
+        left: 40%;
     }
 
     .star {
-        top:38%;
+        top:40%;
+        left:20%;
     }
 
     .life{
-        left: 90%;
-        top: 38%;
+        top: 40%;
+        left: 80%;
+
     }
     
     .deck {
