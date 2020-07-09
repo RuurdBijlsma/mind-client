@@ -151,26 +151,18 @@
                     }, 500);
                 });
             },
-            async discardCard(player, card) {
+            async discardCard(player, card, loseLife = true) {
                 if (this.dead)
                     return false;
                 if (!player.hand.includes(card))
                     return console.warn("Player", player, "tried to [DISCARD] card", card, "but it's not in their hand");
+
                 await this.disappearCard(player, card);
 
-                await this.checkWin();
-            },
-            async playCard(player, card, noPenalty = false) {
-                if (this.dead)
-                    return false;
-                if (!player.hand.includes(card))
-                    return console.warn("Player", player, "tried to [PLAY] card", card, "but it's not in their hand");
-
-                // Remove life if mistake was made
-                if (card < this.topCard && !noPenalty) {
+                if (loseLife) {
                     this.lives--;
                     // this.socket.emit('life_lost', player === this.human);
-                    if (this.lives === 0) {
+                    if (this.dead) {
                         for (let timeout of this.playTimeouts)
                             clearTimeout(timeout)
                         await Swal.fire({
@@ -180,9 +172,21 @@
                             confirmButtonText: '😢',
                         });
                         return;
-                    } else {
-                        // this.playAllLowerCards();
                     }
+                }
+                if (!this.dead)
+                    await this.checkWin();
+            },
+            async playCard(player, card) {
+                if (this.dead)
+                    return false;
+                if (!player.hand.includes(card))
+                    return console.warn("Player", player, "tried to [PLAY] card", card, "but it's not in their hand");
+
+                // Remove life if mistake was made
+                if (card < this.topCard) {
+                    await this.discardCard(player, card);
+                    return;
                 }
                 if (card > this.topCard)
                     this.socket.emit('life_not_lost');
@@ -309,7 +313,7 @@
                         cancelButtonText: "No",
                     })).value;
                     this.socket.emit('shuriken_vote', vote ? 'yes' : 'no');
-                    if(vote){
+                    if (vote) {
                         this.activateShuriken();
                     }
                 });
