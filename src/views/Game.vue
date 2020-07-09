@@ -293,11 +293,25 @@
                     this.playCard(this.models[0], card);
                 });
                 this.socket.on('discard_card', card => {
+                    console.warn("DISCARTDCARD");
                     this.debugEvents.push({name: 'discard_card', data: card});
                     this.discardCard(this.models[0], card);
                 });
-                this.socket.on('shuriken_proposed', () => {
-                    this.debugEvents.push({name: 'shuriken_proposed', data: ''});
+                this.socket.on('propose_shuriken', async () => {
+                    this.debugEvents.push({name: 'propose_shuriken', data: ''});
+
+                    let vote = (await Swal.fire({
+                        title: 'The computer wants to use a Shuriken!',
+                        text: "Do you agree?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes!',
+                        cancelButtonText: "No",
+                    })).value;
+                    this.socket.emit('shuriken_vote', vote ? 'yes' : 'no');
+                    if(vote){
+                        this.activateShuriken();
+                    }
                 });
                 this.socket.on('shuriken_vote', shurikenAgree => {
                     if (shurikenAgree) {
