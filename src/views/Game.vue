@@ -88,6 +88,7 @@
             },
             modelRevealedCards: [],
             discardedCards: [],
+            lastPlayWasDiscard: false,
         }),
         mounted() {
             const url = 'http://localhost:5000';
@@ -126,6 +127,7 @@
                 this.newRound(this.round + 1);
             },
             newRound(roundNumber) {
+                this.lastPlayWasDiscard = false;
                 this.modelRevealedCards = [];
                 this.discardedCards = [];
                 this.nextRoundReady = false;
@@ -162,7 +164,10 @@
 
                 await this.disappearCard(player, card);
 
-                this.lives--;
+                if (!this.lastPlayWasDiscard) {
+                    this.lastPlayWasDiscard = true;
+                    this.lives--;
+                }
                 if (this.dead) {
                     for (let timeout of this.playTimeouts)
                         clearTimeout(timeout)
@@ -203,6 +208,7 @@
                 //     }, i * 300));
                 // }
 
+                this.lastPlayWasDiscard = false;
                 if (player === this.human) {
                     this.socket.emit('card_played', card);
                 } else {
