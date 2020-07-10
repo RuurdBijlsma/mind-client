@@ -145,7 +145,7 @@
                     this.discardedCards.push(card);
                     setTimeout(() => {
                         let index = player.hand.indexOf(card);
-                        console.log('Discarding', index, card, 'from', player.hand);
+                        console.log('disappearing', index, card, 'from', player.hand);
                         player.hand.splice(index, 1);
                         resolve();
                     }, 500);
@@ -161,7 +161,7 @@
 
                 if (loseLife) {
                     this.lives--;
-                    // this.socket.emit('life_lost', player === this.human);
+                    this.socket.emit('life_lost', player === this.human);
                     if (this.dead) {
                         for (let timeout of this.playTimeouts)
                             clearTimeout(timeout)
@@ -220,6 +220,7 @@
             },
             async checkWin() {
                 if (this.players.every(player => player.hand.length === 0)) {
+                    this.socket.emit('end_round', this.round);
                     if (this.round === 12) {
                         await Swal.fire({
                             title: "You win!",
