@@ -151,28 +151,28 @@
                     }, 500);
                 });
             },
-            async discardCard(player, card, loseLife = true) {
+            async discardCard(player, card) {
                 if (this.dead)
                     return false;
                 if (!player.hand.includes(card))
                     return console.warn("Player", player, "tried to [DISCARD] card", card, "but it's not in their hand");
 
+                if (player === this.human)
+                    this.socket.emit('discard_card');
+
                 await this.disappearCard(player, card);
 
-                if (loseLife) {
-                    this.lives--;
-                    this.socket.emit('life_lost', player === this.human);
-                    if (this.dead) {
-                        for (let timeout of this.playTimeouts)
-                            clearTimeout(timeout)
-                        await Swal.fire({
-                            title: "You died one too many times",
-                            text: "You reached round " + this.round,
-                            icon: "error",
-                            confirmButtonText: '😢',
-                        });
-                        return;
-                    }
+                this.lives--;
+                if (this.dead) {
+                    for (let timeout of this.playTimeouts)
+                        clearTimeout(timeout)
+                    await Swal.fire({
+                        title: "You died one too many times",
+                        text: "You reached round " + this.round,
+                        icon: "error",
+                        confirmButtonText: '😢',
+                    });
+                    return;
                 }
                 if (!this.dead)
                     await this.checkWin();
