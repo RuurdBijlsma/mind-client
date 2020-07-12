@@ -2,7 +2,7 @@
     <div class="card hidden" v-if="hide"
          :style="`opacity: ${this.discarded ? 0 : 1}`">
     </div>
-    <div class="card" v-else :clickable="$listeners.hasOwnProperty('click')" @click="$emit('click')">
+    <div title="Life card" class="card" v-else :clickable="$listeners.hasOwnProperty('click')" @click="$emit('click')">
         <div class="top-number">
             <span>{{value}}</span>
             <span>{{value}}</span>
@@ -19,12 +19,8 @@
 
 <script>
     export default {
-        name: 'MindCard',
+        name: 'LifeCard',
         props: {
-            value: {
-                type: Number,
-                default: 0,
-            },
             hide: {
                 type: Boolean,
                 default: false,
@@ -34,14 +30,15 @@
                 default: false,
             },
         },
-        data: () => ({}),
+        data: () => ({
+            value: '♥',
+        }),
         mounted() {
         },
     }
 </script>
 <style scoped>
     .card {
-        font-family: 'Piedra', cursive;
         background-color: white;
         background-image: url("../assets/card-background.png");
         background-repeat: no-repeat;
@@ -77,7 +74,8 @@
     }
 
     .big-number {
-        font-size: 51px;
+        font-size: 45px;
+        transform: scale(2);
         font-weight: bold;
         text-shadow: 0 0 20px white;
     }
