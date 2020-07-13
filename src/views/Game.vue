@@ -129,6 +129,7 @@
             disappearedCards: [],
             discardedCards: [],
             syncNeeded: false,
+            lifeLostThisRound: false,
             lastPlayWasDiscard: false,
         }),
         mounted() {
@@ -169,6 +170,7 @@
                 this.newRound(this.round + 1);
             },
             newRound(roundNumber) {
+                this.lifeLostThisRound = false;
                 this.setModelStatus('');
                 this.modelThinking = false;
                 this.lastPlayWasDiscard = false;
@@ -217,6 +219,7 @@
                 if (!this.lastPlayWasDiscard) {
                     this.lastPlayWasDiscard = true;
                     this.lives--;
+                    this.lifeLostThisRound = true;
                 }
                 if (this.dead) {
                     for (let timeout of this.playTimeouts)
@@ -286,7 +289,11 @@
                             confirmButtonText: '😃',
                         });
                     } else {
-                        this.setModelStatus('👌', 3000);
+                        if(this.lifeLostThisRound){
+                            this.setModelStatus('🙃', 3000);
+                        }else{
+                            this.setModelStatus('👌', 3000);
+                        }
                         let bonuses = this.roundBonuses[this.round];
                         if (bonuses) {
                             let bonusText;
@@ -425,9 +432,9 @@
     .sync-background {
         z-index: 6;
         width: 100%;
-        height: 100%;
+        height: calc(100% - 150px);
         position: absolute;
-        top: 0;
+        top: 50px;
         left: 0;
         display: flex;
         align-items: center;
