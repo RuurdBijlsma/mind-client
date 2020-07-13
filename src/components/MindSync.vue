@@ -101,7 +101,7 @@
 
     @keyframes changeColor {
         0% {
-            border: 0 solid cyan;
+            border: 0 solid white;
             box-shadow: 0 0 50px 10px white;
         }
         33% {
