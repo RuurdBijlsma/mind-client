@@ -1,11 +1,13 @@
 <template>
     <div class="game">
-        <div class="playing-field">
+        <div class="sync-background" v-if="syncNeeded">
+            <mind-sync @sync="startRound"></mind-sync>
+        </div>
+        <div class="playing-field" :style="`
+            filter:blur(${syncNeeded?5:0}px);
+        `">
             <div class="model-think">
                 <div>{{modelStatus}}</div>
-            </div>
-            <div class="sync-background" v-if="syncNeeded">
-                <mind-sync @sync="startRound"></mind-sync>
             </div>
             <div v-if="players[1]" class="computer cards" title="Computer's cards">
                 <p v-if="players[1].hand.length===0">The computer has no cards left</p>
@@ -427,7 +429,6 @@
         position: absolute;
         top: 0;
         left: 0;
-        /*background-color: cyan;*/
         display: flex;
         align-items: center;
         justify-content: center;

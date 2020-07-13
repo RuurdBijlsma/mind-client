@@ -2,6 +2,9 @@
     <v-app class="app">
         <div class="navigation">
             <div>
+                <v-btn text to="/">Home</v-btn>
+            </div>
+            <div>
                 <v-btn text to="play">Play</v-btn>
             </div>
             <div>
