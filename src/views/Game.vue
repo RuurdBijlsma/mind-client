@@ -4,6 +4,9 @@
             <div class="model-think">
                 <div>{{modelStatus}}</div>
             </div>
+            <div class="sync-background" v-if="syncNeeded">
+                <mind-sync @sync="startRound"></mind-sync>
+            </div>
             <div v-if="players[1]" class="computer cards" title="Computer's cards">
                 <p v-if="players[1].hand.length===0">The computer has no cards left</p>
                 <mind-card v-for="card in players[1].hand" :key="card" :hide="!modelRevealedCards.includes(card)"
@@ -82,6 +85,7 @@
     import Swal from 'sweetalert2'
     import LifeCard from "../components/LifeCard";
     import ShurikenCard from "../components/ShurikenCard";
+    import MindSync from "../components/MindSync";
 
     // Todo:
     // More game functionality
@@ -93,7 +97,7 @@
 
     export default {
         name: 'Game',
-        components: {ShurikenCard, LifeCard, MindCard},
+        components: {MindSync, ShurikenCard, LifeCard, MindCard},
         data: () => ({
             debug: true,
             socket: null,
@@ -122,6 +126,7 @@
             modelRevealedCards: [],
             disappearedCards: [],
             discardedCards: [],
+            syncNeeded: false,
             lastPlayWasDiscard: false,
         }),
         mounted() {
@@ -132,7 +137,7 @@
             this.newGame(2)
         },
         beforeDestroy() {
-            this.clearTimeout(this.statusTimeout);
+            clearTimeout(this.statusTimeout);
             this.socket.destroy()
         },
         methods: {
@@ -166,6 +171,7 @@
                 this.modelThinking = false;
                 this.lastPlayWasDiscard = false;
                 this.modelRevealedCards = [];
+                this.syncNeeded = true;
                 this.disappearedCards = [];
                 this.discardedCards = [];
                 this.nextRoundReady = false;
@@ -178,6 +184,9 @@
                     console.log(player.hand)
                     player.hand = player.hand.sort((a, b) => a - b);
                 }
+            },
+            startRound() {
+                this.syncNeeded = false;
                 this.socket.emit('new_round', this.models[0].hand);
             },
             async disappearCard(player, card) {
@@ -409,6 +418,19 @@
         flex-direction: column;
         width: 100%;
         height: 100%;
+    }
+
+    .sync-background {
+        z-index: 6;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        /*background-color: cyan;*/
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .playing-field {

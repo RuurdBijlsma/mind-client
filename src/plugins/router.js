@@ -14,7 +14,12 @@ const routes = [
         path: '/play',
         name: 'Play',
         component: () => import('../views/Game')
-    }
+    },
+    {
+        path: '/tutorial',
+        name: 'Tutorial',
+        component: () => import('../views/Tutorial')
+    },
 ];
 
 const router = new VueRouter({
