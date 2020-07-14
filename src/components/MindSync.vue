@@ -1,6 +1,6 @@
 <template>
     <div class="mind-sync">
-        <p class="explain-text">You must synchronize your mind to start the round</p>
+        <p class="explain-text">You must synchronize your minds to start the round</p>
         <div v-if="!visible" class="complete">
             ✔
         </div>

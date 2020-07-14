@@ -101,7 +101,7 @@
         name: 'Game',
         components: {MindSync, ShurikenCard, LifeCard, MindCard},
         data: () => ({
-            debug: true,
+            debug: false,
             socket: null,
             debugEvents: [],
             players: [],
@@ -137,7 +137,7 @@
             this.socket = io(url);
             console.log('Server starting:', this.socket);
             this.setSocketListeners();
-            this.newGame(2)
+            this.newGame(2);
         },
         beforeDestroy() {
             clearTimeout(this.statusTimeout);
@@ -163,11 +163,11 @@
                 }
                 this.lives = 2;
                 this.shurikens = 1;
-                if(this.debug){
+                if (this.debug) {
                     this.shurikens = 3;
                 }
                 this.socket.emit('new_game');
-                this.newRound(3);
+                this.newRound(this.debug ? 3 : 1);
             },
             nextRound() {
                 this.newRound(this.round + 1);
@@ -191,7 +191,7 @@
                     console.log(player.hand)
                     player.hand = player.hand.sort((a, b) => a - b);
                 }
-                if(this.debug){
+                if (this.debug) {
                     this.startRound()
                 }
             },
