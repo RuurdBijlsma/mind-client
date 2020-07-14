@@ -163,6 +163,7 @@
                 }
                 this.lives = 2;
                 this.shurikens = 1;
+                // this.shurikens = 3;
                 this.socket.emit('new_game');
                 this.newRound(1);
             },
@@ -204,7 +205,7 @@
                     }, 500);
                 });
             },
-            async discardCard(player, card) {
+            async discardCard(player, card, shurikenDiscard = true) {
                 if (this.dead)
                     return false;
                 if (!player.hand.includes(card))
@@ -216,15 +217,17 @@
                 this.discardedCards.push(card);
                 await this.disappearCard(player, card);
 
-                if (!this.lastPlayWasDiscard) {
+                if (!this.lastPlayWasDiscard && shurikenDiscard) {
                     this.lastPlayWasDiscard = true;
                     this.lives--;
                     this.lifeLostThisRound = true;
+                } else if (!shurikenDiscard) {
+                    this.lastPlayWasDiscard = false;
                 }
                 if (this.dead) {
                     for (let timeout of this.playTimeouts)
                         clearTimeout(timeout)
-                    this.setModelStatus('😡')
+                    this.setModelStatus('😭');
                     await Swal.fire({
                         title: "You died one too many times",
                         text: "You reached round " + this.round,
@@ -237,6 +240,8 @@
                     await this.checkWin();
             },
             async playCard(player, card) {
+                if (this.modelThinking)
+                    return console.log("Cant pay card when model is thinking");
                 if (this.dead)
                     return false;
                 if (!player.hand.includes(card))
@@ -289,9 +294,9 @@
                             confirmButtonText: '😃',
                         });
                     } else {
-                        if(this.lifeLostThisRound){
+                        if (this.lifeLostThisRound) {
                             this.setModelStatus('🙃', 3000);
-                        }else{
+                        } else {
                             this.setModelStatus('👌', 3000);
                         }
                         let bonuses = this.roundBonuses[this.round];
@@ -333,7 +338,7 @@
                 this.shurikens--;
                 console.log("Human lowest card:", this.human.hand[0], "model lowest card", this.models[0].hand[0])
                 this.socket.emit('reveal_lowest_card', this.human.hand[0]);
-                this.discardCard(this.human, this.human.hand[0]);
+                this.discardCard(this.human, this.human.hand[0], false);
                 this.modelRevealedCards.push(this.models[0].hand[0]);
             },
             shuffle(input) {
@@ -364,11 +369,11 @@
                     this.debugEvents.push({name: 'play_card', data: card});
                     this.playCard(this.models[0], card);
                 });
-                this.socket.on('discard_card', card => {
+                this.socket.on('discard_card', (card, isShurikenDiscard) => {
                     this.setModelStatus(['😭', '😢', '😞', '😖', '😡'][Math.floor(Math.random() * 5)], 2000);
                     console.warn("DISCARTDCARD");
                     this.debugEvents.push({name: 'discard_card', data: card});
-                    this.discardCard(this.models[0], card);
+                    this.discardCard(this.models[0], card, isShurikenDiscard);
                 });
                 this.socket.on('propose_shuriken', async () => {
                     this.modelThinking = true;
@@ -401,6 +406,26 @@
                 this.socket.on('hello', world => {
                     this.debugEvents.push({name: 'hello', data: world});
                 });
+            }
+        },
+        async beforeRouteLeave(to, from, next) {
+            if (this.round <= 1 && !this.nextRoundReady) {
+                next();
+                return;
+            }
+
+            const answer = (await Swal.fire({
+                title: 'Are you sure you want to leave the game?',
+                text: "All progress will be lost!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, leave!'
+            })).value
+            // const answer = window.confirm('Do you really want to leave? you have unsaved changes!')
+            if (answer) {
+                next()
+            } else {
+                next(false)
             }
         },
         watch: {

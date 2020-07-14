@@ -22,6 +22,8 @@
             <img src="../assets/tutorial.png" alt="tutorial image">
             <p>The image above shows what a game can look like, below is an explanation of the different components.</p>
             <ul>
+                <li><span style="color:deeppink">Pink</span>: The emotional state of the computer, if something goes wrong the computer becomes sad.
+                </li>
                 <li><span style="color:yellow">Yellow</span>: The computer's cards, the values on these cards are not
                     visible to the player.
                 </li>
