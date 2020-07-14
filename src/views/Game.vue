@@ -163,9 +163,11 @@
                 }
                 this.lives = 2;
                 this.shurikens = 1;
-                // this.shurikens = 3;
+                if(this.debug){
+                    this.shurikens = 3;
+                }
                 this.socket.emit('new_game');
-                this.newRound(1);
+                this.newRound(3);
             },
             nextRound() {
                 this.newRound(this.round + 1);
@@ -189,6 +191,9 @@
                     console.log(player.hand)
                     player.hand = player.hand.sort((a, b) => a - b);
                 }
+                if(this.debug){
+                    this.startRound()
+                }
             },
             startRound() {
                 this.syncNeeded = false;
@@ -205,7 +210,7 @@
                     }, 500);
                 });
             },
-            async discardCard(player, card, shurikenDiscard = true) {
+            async discardCard(player, card, shurikenDiscard = false) {
                 if (this.dead)
                     return false;
                 if (!player.hand.includes(card))
@@ -217,11 +222,11 @@
                 this.discardedCards.push(card);
                 await this.disappearCard(player, card);
 
-                if (!this.lastPlayWasDiscard && shurikenDiscard) {
+                if (!this.lastPlayWasDiscard && !shurikenDiscard) {
                     this.lastPlayWasDiscard = true;
                     this.lives--;
                     this.lifeLostThisRound = true;
-                } else if (!shurikenDiscard) {
+                } else if (shurikenDiscard) {
                     this.lastPlayWasDiscard = false;
                 }
                 if (this.dead) {
@@ -338,7 +343,7 @@
                 this.shurikens--;
                 console.log("Human lowest card:", this.human.hand[0], "model lowest card", this.models[0].hand[0])
                 this.socket.emit('reveal_lowest_card', this.human.hand[0]);
-                this.discardCard(this.human, this.human.hand[0], false);
+                this.discardCard(this.human, this.human.hand[0], true);
                 this.modelRevealedCards.push(this.models[0].hand[0]);
             },
             shuffle(input) {
@@ -369,11 +374,16 @@
                     this.debugEvents.push({name: 'play_card', data: card});
                     this.playCard(this.models[0], card);
                 });
-                this.socket.on('discard_card', (card, isShurikenDiscard) => {
+                this.socket.on('shuriken_discard_card', card => {
+                    console.warn("SHURIKEN_DISCARTDCARD");
+                    this.debugEvents.push({name: 'shuriken_discard_card', data: card});
+                    this.discardCard(this.models[0], card, true);
+                });
+                this.socket.on('discard_card', card => {
                     this.setModelStatus(['😭', '😢', '😞', '😖', '😡'][Math.floor(Math.random() * 5)], 2000);
                     console.warn("DISCARTDCARD");
                     this.debugEvents.push({name: 'discard_card', data: card});
-                    this.discardCard(this.models[0], card, isShurikenDiscard);
+                    this.discardCard(this.models[0], card);
                 });
                 this.socket.on('propose_shuriken', async () => {
                     this.modelThinking = true;
