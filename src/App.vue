@@ -56,4 +56,16 @@
     .navigation > div {
         margin: 0 20px;
     }
+    @media only screen and (max-width: 600px) {
+
+        .navigation > div {
+            margin: 0 5px;
+        }
+    }
+    @media only screen and (max-width: 450px) {
+
+        .navigation > div {
+            margin: 0 0px;
+        }
+    }
 </style>
