@@ -1,7 +1,6 @@
 export default class Player {
-    constructor(name, isComputer = false) {
+    constructor(name) {
         this.name = name;
         this.hand = [];
-        this.isComputer = isComputer;
     }
 }

@@ -61,7 +61,8 @@
                 <v-btn @click="nextRound" v-if="nextRoundReady" color="primary">Next Round</v-btn>
                 <v-btn @click="newGame(2, true)">New Game</v-btn>
             </div>
-            <p class="round-display">Round {{round}}</p>
+            <p class="round-display" v-if="!serverConnecting">Round {{round}}</p>
+            <v-progress-circular indeterminate v-else></v-progress-circular>
             <div class="next-round-reward" title="Bonus lives and shurikens this round">
                 <div v-if="roundBonuses[round]" class="pile">
                     <shuriken-card
@@ -104,6 +105,7 @@
             debug: false,
             socket: null,
             debugEvents: [],
+            serverConnecting: true,
             players: [],
             models: [],
             statusTimeout: -1,
@@ -133,8 +135,22 @@
             lastPlayWasDiscard: false,
         }),
         mounted() {
-            const url = 'http://localhost:5000';
-            this.socket = io(url);
+            console.log(`Connecting to ${this.$store.state.url}`);
+            this.socket = io(this.$store.state.url);
+            let errorShown = false;
+            this.socket.on('connect', () => {
+                this.serverConnecting = false;
+            });
+            this.socket.on('connect_error', () => {
+                if (!errorShown) {
+                    errorShown = true;
+                    Swal.fire({
+                        title: `Can't connect to server`,
+                        text: `Server IP ${this.$store.state.url}`,
+                        icon: 'error',
+                    });
+                }
+            });
             console.log('Server starting:', this.socket);
             this.setSocketListeners();
             this.newGame(2);
@@ -152,12 +168,12 @@
                     showCancelButton: true,
                     confirmButtonText: 'Yes, new game!'
                 })).value) return;
-                this.human = new Player('human', false);
+                this.human = new Player('human');
                 this.players = [];
                 this.models = [];
                 this.players.push(this.human);
                 for (let i = 0; i < players - 1; i++) {
-                    let computerPlayer = new Player('model' + (i + 1), true);
+                    let computerPlayer = new Player('model' + (i + 1));
                     this.players.push(computerPlayer);
                     this.models.push(computerPlayer);
                 }

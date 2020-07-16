@@ -11,8 +11,15 @@ if (document.querySelectorAll(`head link[rel='manifest']`).length === 0) {
 Vue.use(Vuex);
 
 export default new Vuex.Store({
-    state: {},
-    mutations: {},
+    state: {
+        url: localStorage.getItem('url') === null ? 'http://localhost:5000' : localStorage.url,
+    },
+    mutations: {
+        url(state, newUrl) {
+            state.url = newUrl;
+            localStorage.url = newUrl;
+        }
+    },
     actions: {},
     modules: {}
 })

@@ -20,6 +20,11 @@ const routes = [
         name: 'Tutorial',
         component: () => import('../views/Tutorial')
     },
+    {
+        path: '/settings',
+        name: 'Settings',
+        component: () => import('../views/Settings')
+    },
 ];
 
 const router = new VueRouter({
