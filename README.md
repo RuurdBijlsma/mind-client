@@ -1,6 +1,7 @@
 # mind-client
+Server source code: https://github.com/RuurdBijlsma/mind-server
 
-Requirements:
+## Requirements:
 * NodeJS
 * NPM
 
